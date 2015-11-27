@@ -5,11 +5,11 @@ var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
 var md5			= require('md5');
-
+var moment 		= require('moment');
 var jwt    = require('jsonwebtoken');
 var config = require('../config');
 var User   = require('../app/models/user');
-
+var MoneyHistory = require('../app/models/MoneyHistory')
 
 mongoose.connect(config.database); 
 app.set('superSecret', config.secret);
@@ -96,13 +96,69 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res) {
-	res.json({ message: 'Welcome to the coolest API on earth!' });
+	res.json({ message: 'Welcome to the coolest API on earth!'});
 });
 
 router.get('/users', function(req, res) {
   User.find({}, function(err, users) {
     res.json(users);
   });
-});   
+});  
+
+router.post('/record', function(req, res) {
+
+	var newRecord = new MoneyHistory({
+		user_id: req.decoded._id,
+		user_name: req.decoded.name,
+		item: req.body.item,
+		amount: req.body.amount,
+		location: {
+			latitude: req.body.latitude,
+	    	longitude: req.body.longitude
+		},
+		record_time: req.body.time,
+		category: req.body.category
+	});
+
+	newRecord.save(function(err) {
+		if (err) 
+			throw err;
+		res.json({ success: true, data: newRecord });
+	});
+});
+
+router.get('/history/', function(req, res) {
+	MoneyHistory.find({
+		user_id: req.decoded._id
+	}, function(err, history) {
+		res.json({success: true ,results: history});
+	});
+
+});
+
+router.get('/history/today', function(req, res) {
+	var today = moment().startOf('day');
+	var tomorrow = moment(today).add(1, 'days');
+
+	MoneyHistory.find({
+		"time":  {	
+			"$gte": today.format(), 
+			"$lt": tomorrow.format()
+		}
+	}, function(err, history) {
+		res.json({success: true ,results: history});
+	});
+});
+
+router.delete('/delete', function(req, res) {
+	MoneyHistory.remove({
+		_id: req.body.id
+	}, function(err) {
+		if (err) 
+			throw err;
+		else
+			res.json({success: true});
+	});
+});
 
 module.exports = router;
