@@ -146,7 +146,21 @@ router.get('/history/today', function(req, res) {
 			"$lt": tomorrow.format()
 		}
 	}, function(err, history) {
-		res.json({success: true ,results: history});
+		res.json({success: true, date: today.format(), results: history});
+	});
+});
+
+router.get('/history/date/:date', function(req, res) {
+	var today = moment().startOf(req.params.date);
+	var tomorrow = moment(today).add(1, req.params.date);
+
+	MoneyHistory.find({
+		"time":  {	
+			"$gte": today.format(), 
+			"$lt": tomorrow.format()
+		}
+	}, function(err, history) {
+		res.json({success: true, date: today.format(),results: history});
 	});
 });
 
@@ -159,6 +173,10 @@ router.delete('/delete', function(req, res) {
 		else
 			res.json({success: true});
 	});
+});
+
+router.get('/predict', function(req, res) {
+
 });
 
 module.exports = router;
