@@ -6,6 +6,7 @@ var morgan      = require('morgan');
 var mongoose    = require('mongoose');
 var md5			= require('md5');
 var moment 		= require('moment');
+var _  = require('underscore');
 var jwt    = require('jsonwebtoken');
 var config = require('../config');
 var User   = require('../app/models/user');
@@ -146,7 +147,9 @@ router.get('/history/today', function(req, res) {
 			"$lt": tomorrow.format()
 		}
 	}, function(err, history) {
-		res.json({success: true, date: today.format(), results: history});
+		totalAmount = _.pluck(history, "amount");
+		totalAmount = _.reduce(totalAmount, function(memo, num){ return memo + num; }, 0);
+		res.json({success: true, date: today.format(), results: history, total_amount: totalAmount});
 	});
 });
 
@@ -165,6 +168,9 @@ router.get('/history/date/:date', function(req, res) {
 });
 
 router.delete('/delete', function(req, res) {
+	var id = req.body.id
+	if (!id)
+		req.params.id
 	MoneyHistory.remove({
 		_id: req.body.id
 	}, function(err) {
