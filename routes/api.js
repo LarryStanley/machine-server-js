@@ -154,8 +154,23 @@ router.get('/history/today', function(req, res) {
 });
 
 router.get('/history/date/:date', function(req, res) {
-	var today = moment().startOf(req.params.date);
-	var tomorrow = moment(today).add(1, req.params.date);
+	var today = moment(req.params.date);
+	var tomorrow = moment(today).add(1, 'days');
+	MoneyHistory.find({
+		"time":  {	
+			"$gte": today.format(), 
+			"$lt": tomorrow.format()
+		}
+	}, function(err, history) {
+		totalAmount = _.pluck(history, "amount");
+		totalAmount = _.reduce(totalAmount, function(memo, num){ return memo + num; }, 0);
+		res.json({success: true, date: today.format(),results: history, total_amount: totalAmount});
+	});
+});
+
+router.get('/history/week/:date', function(req, res) {
+	var today = moment(req.params.date).day(1);
+	var tomorrow = moment(req.params.date).day(7);
 
 	MoneyHistory.find({
 		"time":  {	
@@ -163,11 +178,13 @@ router.get('/history/date/:date', function(req, res) {
 			"$lt": tomorrow.format()
 		}
 	}, function(err, history) {
-		res.json({success: true, date: today.format(),results: history});
+		totalAmount = _.pluck(history, "amount");
+		totalAmount = _.reduce(totalAmount, function(memo, num){ return memo + num; }, 0);
+		res.json({success: true, date: today.format(),results: history, total_amount: totalAmount});
 	});
 });
 
-router.delete('/delete', function(req, res) {
+router.post('/delete', function(req, res) {
 	var id = req.body.id
 	if (!id)
 		req.params.id

@@ -19,6 +19,7 @@
     "jsonwebtoken": "~5.4.0",
     "md5": "~2.0.0",
     "moment": "~2.10.6",
-    "underscore": "^1.7.0"
+    "underscore": "^1.7.0",
+    "forever" : "~0.15.1"
   }
 }
