@@ -184,6 +184,22 @@ router.get('/history/week/:date', function(req, res) {
 	});
 });
 
+router.get('/history/month/:date', function(req, res) {
+	var today = moment(req.params.date).date(1);
+	var tomorrow = moment(req.params.date).date(31);
+
+	MoneyHistory.find({
+		"time":  {	
+			"$gte": today.format(), 
+			"$lt": tomorrow.format()
+		}
+	}, function(err, history) {
+		totalAmount = _.pluck(history, "amount");
+		totalAmount = _.reduce(totalAmount, function(memo, num){ return memo + num; }, 0);
+		res.json({success: true, date: today.format(),results: history, total_amount: totalAmount});
+	});
+});
+
 router.post('/delete', function(req, res) {
 	var id = req.body.id
 	if (!id)
@@ -200,6 +216,20 @@ router.post('/delete', function(req, res) {
 
 router.get('/predict', function(req, res) {
 
+});
+
+router.get('/predict/autoComplete/:name', function(req, res) {
+	MoneyHistory.find({
+		"item": {'$regex': req.params.name}
+	}, function(err, results) {
+		if (err) 
+			throw err;
+		else {
+			results = _.uniq(_.pluck(results, "item"));
+
+			res.json(results);
+		}
+	});
 });
 
 module.exports = router;
